@@ -1,6 +1,7 @@
 #ifndef METEORITOCOMMONDATAFLOWOUTPUT_H
 #define METEORITOCOMMONDATAFLOWOUTPUT_H
 
+#include <boost/noncopyable.hpp>
 #include <functional>
 #include <atomic>
 #include <stdexcept>
@@ -9,10 +10,10 @@ namespace Esferixis {
     namespace Common {
         namespace Dataflow {
             /**
-             * @brief Salida de datagrama tipo D
+             * @brief Salida de paquete tipo D
              */
-            template<typename D>
-            class Output
+            template<typename P>
+            class Output : private boost::noncopyable
             {
             public:
                 /**
@@ -26,31 +27,32 @@ namespace Esferixis {
                 ~Output();
 
                 /**
-                 * @pre No tiene que haber envío de datagrama pendiente
-                 * @post Envía el datagrama especificado, con el lambda de notificación
+                 * @pre No tiene que haber envío de paquete pendiente
+                 * @post Envía el paquete especificado, con el lambda de notificación
                  *       de llegada especificado
                  */
-                void sendDatagram(D outputDatagram, std::function<void ()> notifyDatagramArrival) {
-                    if ( !this->hasPendingDatagramSending.exchange(true) ) {
-                        this->sendDatagram_implementation(outputDatagram, [notifyDatagramArrival]() -> void {
-                            this->hasPendingDatagramSending = false;
+                void sendPacket(P outputPacket, std::function<void ()> notifyPacketArrival) {
+                    if ( !this->hasPendingPacketSending.exchange(true) ) {
+                        this->sendPacket_implementation(outputPacket, [notifyPacketArrival]() -> void {
+                            this->hasPendingPacketSending = false;
                             notifyDatagramArrival();
                         });
                     }
                     else {
+                        this->hasPendingPacketSending = false;
                         throw std::runtime_error("It has been pending datagram sending");
                     }
                 }
             protected:
                 /**
                  * @pre No hay envío de datagrama pendiente
-                 * @post Envía el datagrama especificado, con el lambda de notificación
+                 * @post Envía el paquete especificado, con el lambda de notificación
                  *       de llegada especificado
                  */
-                void sendDatagram_implementation(D outputDatagram, std::function<void ()> notifyDatagramArrival);
+                void sendPacket_implementation(P outputPacket, std::function<void ()> notifyPacketArrival);
 
             private:
-                std::atomic<bool> hasPendingDatagramSending;
+                std::atomic<bool> hasPendingPacketSending;
             };
         }
     }
