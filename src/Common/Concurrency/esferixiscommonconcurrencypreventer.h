@@ -30,42 +30,45 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef ESFERIXISCOMMONDATAFLOWGRAPH_H
-#define ESFERIXISCOMMONDATAFLOWGRAPH_H
+#ifndef ESFERIXISCOMMONCONCURRENCYPREVENTER_H
+#define ESFERIXISCOMMONCONCURRENCYPREVENTER_H
 
-#include <boost/noncopyable.hpp>
-#include <memory>
-
-#include "esferixiscommondataflowconnection.h"
+#include <string>
+#include <functional>
+#include <atomic>
 
 namespace Esferixis {
     namespace Common {
-        namespace Dataflow {
-            class ConnectionsManager : private boost::noncopyable
+        namespace Concurrency {
+            class ConcurrencyPreventer final
             {
             public:
                 /**
-                 * @post Crea un administrador de conexiones
+                 * @post Crea el prevenidor de concurrencia con el mensaje de
+                 *       error especificado
                  */
-                ConnectionsManager();
+                ConcurrencyPreventer(std::string errorMessage);
 
                 /**
-                 * @post Destruye el administrador de conexiones
+                 * @pre No tiene que haber un lambda ejecutándose
+                 * @post Destruye el prevenidor de concurrencia
                  */
-                ~ConnectionsManager();
+                ~ConcurrencyPreventer();
 
                 /**
-                 * @post Agrega la conexión especificada
+                 * @pre No tiene que haber otro lambda ejecutándose
+                 * @post Ejecuta el lambda sólo si no hay otro lambda ejecutándose.
+                 *
+                 *       Si lo hay lanza una excepción con el correspondiente mensaje de error.
                  */
-                virtual void addConnection(std::shared_ptr<Esferixis::Common::Dataflow::Connection> connection) =0;
+                void run(std::function<void ()> function);
 
-                /**
-                 * @post Quita la conexión especificada
-                 */
-                virtual void removeConnection(std::shared_ptr<Esferixis::Common::Dataflow::Connection> connection) =0;
+            private:
+                const std::string errorMessage;
+                std::atomic<bool> hasExecutingAFunction;
             };
         }
     }
 }
 
-#endif // ESFERIXISCOMMONDATAFLOWGRAPH_H
+#endif // ESFERIXISCOMMONCONCURRENCYPREVENTER_H

@@ -30,42 +30,25 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef ESFERIXISCOMMONDATAFLOWGRAPH_H
-#define ESFERIXISCOMMONDATAFLOWGRAPH_H
+#include "esferixiscommonconcurrencypreventer.h"
 
-#include <boost/noncopyable.hpp>
-#include <memory>
+Esferixis::Common::Concurrency::ConcurrencyPreventer::ConcurrencyPreventer(std::string errorMessage) : errorMessage(errorMessage) {
+    this->hasExecutingAFunction = false;
+}
 
-#include "esferixiscommondataflowconnection.h"
-
-namespace Esferixis {
-    namespace Common {
-        namespace Dataflow {
-            class ConnectionsManager : private boost::noncopyable
-            {
-            public:
-                /**
-                 * @post Crea un administrador de conexiones
-                 */
-                ConnectionsManager();
-
-                /**
-                 * @post Destruye el administrador de conexiones
-                 */
-                ~ConnectionsManager();
-
-                /**
-                 * @post Agrega la conexión especificada
-                 */
-                virtual void addConnection(std::shared_ptr<Esferixis::Common::Dataflow::Connection> connection) =0;
-
-                /**
-                 * @post Quita la conexión especificada
-                 */
-                virtual void removeConnection(std::shared_ptr<Esferixis::Common::Dataflow::Connection> connection) =0;
-            };
-        }
+Esferixis::Common::Concurrency::ConcurrencyPreventer::~ConcurrencyPreventer() {
+    if ( this->hasExecutingAFunction.exchange(true) ) {
+        throw std::runtime_error("Unexpected destruction when it has executing a function");
     }
 }
 
-#endif // ESFERIXISCOMMONDATAFLOWGRAPH_H
+void Esferixis::Common::Concurrency::ConcurrencyPreventer::run(std::function<void ()> function) {
+    if ( this->hasExecutingAFunction.exchange(true) ) {
+        function();
+        this->hasExecutingAFunction = false;
+    }
+    else {
+        this->hasExecutingAFunction = false;
+        throw std::runtime_error(this->errorMessage);
+    }
+}
