@@ -24,6 +24,7 @@ HEADERS += \
     Common/Dataflow/esferixiscommondataflowoutput.h \
     Common/Dataflow/esferixiscommondataflowconnectionsmanager.h \
     Common/Concurrency/esferixiscommonconcurrencypreventer.h \
-    Common/Dataflow/esferixiscommondataflowinterfaceelement.h
+    Common/Dataflow/esferixiscommondataflowinterfaceelement.h \
+    Common/DataStructures/array.h
 
 QMAKE_CXXFLAGS += -O2 -std=c++1z -Wall -Werror=delete-non-virtual-dtor -Werror=return-type
