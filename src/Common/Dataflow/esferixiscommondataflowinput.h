@@ -66,9 +66,9 @@ namespace Esferixis {
                 /**
                  * @pre No tiene que haber recepción de paquete pendiente ni otra operación
                  *      concurrente
-                 * @post Devuelve si va a bloquear si recibe un paquete
+                 * @post Devuelve si va a procesar en éste thread si recibe un paquete
                  */
-                bool willBlockIfItReceiveAnPacket() {
+                bool willProcessInThisThreadIfItReceiveAnPacket() {
                     this->concurrencyPreventer.run([this]() -> void {
                         return this->willBlockIfItReceiveAnPacket_implementation();
                     });
